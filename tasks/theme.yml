@@ -16,7 +16,7 @@
 
 - name: Проверка существования темы Powerlevel10k
   ansible.builtin.stat:
-    path: "{{ zsh_user_home }}/.oh-my-zsh/{{ zsh_powerlevel10k_dest }}"
+    path: "{{ zsh_ohmyzsh_dir }}/{{ zsh_powerlevel10k_dest }}"
   register: p10k_theme_stat
   tags:
     - zsh
@@ -26,10 +26,11 @@
 - name: Установка темы Powerlevel10k
   ansible.builtin.git:
     repo: "{{ zsh_powerlevel10k_repo }}"
-    dest: "{{ zsh_user_home }}/.oh-my-zsh/{{ zsh_powerlevel10k_dest }}"
+    dest: "{{ zsh_ohmyzsh_dir }}/{{ zsh_powerlevel10k_dest }}"
     version: "{{ zsh_powerlevel10k_version }}"
     update: true
     force: true
+    depth: 1
   become_user: "{{ zsh_user }}"
   when:
     - zsh_check_git | bool
@@ -45,9 +46,10 @@
 - name: Обновление темы Powerlevel10k (если уже установлена)
   ansible.builtin.git:
     repo: "{{ zsh_powerlevel10k_repo }}"
-    dest: "{{ zsh_user_home }}/.oh-my-zsh/{{ zsh_powerlevel10k_dest }}"
+    dest: "{{ zsh_ohmyzsh_dir }}/{{ zsh_powerlevel10k_dest }}"
     version: "{{ zsh_powerlevel10k_version }}"
     update: true
+    depth: 1
   become_user: "{{ zsh_user }}"
   when:
     - zsh_check_git | bool
@@ -62,7 +64,7 @@
 
 - name: Проверка успешной установки темы Powerlevel10k
   ansible.builtin.stat:
-    path: "{{ zsh_user_home }}/.oh-my-zsh/{{ zsh_powerlevel10k_dest }}/powerlevel10k.zsh-theme"
+    path: "{{ zsh_ohmyzsh_dir }}/{{ zsh_powerlevel10k_dest }}/powerlevel10k.zsh-theme"
   register: p10k_theme_check
   tags:
     - zsh

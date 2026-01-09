@@ -14,20 +14,39 @@ export LC_CTYPE={{ zsh_locale_default }}
 # Тема oh-my-zsh
 ZSH_THEME="{{ zsh_theme }}"
 
-# Плагины oh-my-zsh
+# Плагины oh-my-zsh (исключаем внешние плагины - они загружаются вручную после oh-my-zsh.sh)
 plugins=(
 {% for plugin in zsh_plugins %}
+{% if plugin != 'zsh-autosuggestions' and plugin != 'zsh-syntax-highlighting' %}
   {{ plugin }}
+{% endif %}
 {% endfor %}
 )
 
 # Загрузка oh-my-zsh
 source $ZSH/oh-my-zsh.sh
 
-# Настройка Powerlevel10k
+# Загрузка плагина zsh-autosuggestions (должен быть ДО syntax-highlighting)
+{% if 'zsh-autosuggestions' in zsh_plugins %}
+if [[ -f $ZSH/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then
+  source $ZSH/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+fi
+{% endif %}
+
+# Настройка Powerlevel10k (должен загружаться ПОСЛЕ oh-my-zsh.sh, но ДО syntax-highlighting)
 {% if zsh_theme == "powerlevel10k/powerlevel10k" and zsh_create_p10k_config | bool %}
 if [[ -f {{ zsh_user_home }}/.p10k.zsh ]]; then
   source {{ zsh_user_home }}/.p10k.zsh
+fi
+{% endif %}
+
+# Загрузка плагина zsh-syntax-highlighting (должен быть ПОСЛЕЕДНИМ!)
+# КРИТИЧНО: Этот плагин ДОЛЖЕН загружаться ПОСЛЕ ВСЕХ других плагинов и тем
+{% if 'zsh-syntax-highlighting' in zsh_plugins %}
+if [[ -f $ZSH/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
+  source $ZSH/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+else
+  echo "⚠️  WARNING: zsh-syntax-highlighting не найден! Подсветка синтаксиса не работает."
 fi
 {% endif %}
 

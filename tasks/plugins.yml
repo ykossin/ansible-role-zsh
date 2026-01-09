@@ -17,14 +17,17 @@
 - name: Установка внешних плагинов из репозиториев
   ansible.builtin.git:
     repo: "{{ item.repo }}"
-    dest: "{{ item.dest }}"
+    dest: "{{ zsh_ohmyzsh_dir }}/{{ item.dest }}"
     version: "{{ item.version | default('master') }}"
     update: true
     force: true
   become_user: "{{ zsh_user }}"
   loop: "{{ zsh_external_plugins }}"
   when:
+    - zsh_check_git | bool
+    - git_check is defined
     - git_check.rc == 0
+    - zsh_install_external_plugins | bool
     - zsh_install_ohmyzsh | bool
   tags:
     - zsh

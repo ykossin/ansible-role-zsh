@@ -5,6 +5,15 @@
   hosts: all
   gather_facts: true
   become: true
+  vars:
+    zsh_user: "root"
+    zsh_user_home: "/root"
+    zsh_ohmyzsh_dir: "/root/.oh-my-zsh"
+    zsh_install_external_plugins: true
+    zsh_install_powerlevel10k: true
+    zsh_create_p10k_config: true
+    zsh_configure_tmux: true
+    zsh_configure_nano: true
   tasks:
     - name: Проверка версии дистрибутива
       ansible.builtin.assert:
@@ -63,14 +72,24 @@
         - verify
         - verify:user
 
+    - name: Получение shell пользователя из passwd
+      ansible.builtin.shell:
+        cmd: "getent passwd {{ zsh_user }} | cut -d: -f7"
+      register: user_shell_cmd
+      changed_when: false
+      tags:
+        - verify
+        - verify:user
+
     - name: Проверка shell пользователя
       ansible.builtin.assert:
         that:
-          - user_shell_info.ansible_facts.getent_passwd[zsh_user][4] == zsh_path.stdout
-        fail_msg: "Zsh не установлен как shell по умолчанию для пользователя {{ zsh_user }}"
+          - user_shell_cmd.stdout == zsh_path.stdout
+        fail_msg: "Zsh не установлен как shell по умолчанию для пользователя {{ zsh_user }}. Текущий shell: {{ user_shell_cmd.stdout }}, ожидается: {{ zsh_path.stdout }}"
         success_msg: "Zsh установлен как shell по умолчанию для пользователя {{ zsh_user }}"
       tags:
         - verify
+        - verify:zsh
         - verify:user
 
     - name: Проверка наличия oh-my-zsh
