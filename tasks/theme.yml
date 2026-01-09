@@ -1,0 +1,82 @@
+---
+# Установка темы Powerlevel10k
+
+- name: Проверка наличия git перед установкой темы
+  ansible.builtin.assert:
+    that:
+      - git_check is defined
+      - git_check.rc == 0
+    fail_msg: "Git не установлен. Установка темы невозможна."
+    success_msg: "Git найден, можно устанавливать тему"
+  when: zsh_check_git | bool
+  tags:
+    - zsh
+    - theme
+    - zsh:theme
+
+- name: Проверка существования темы Powerlevel10k
+  ansible.builtin.stat:
+    path: "{{ zsh_user_home }}/.oh-my-zsh/{{ zsh_powerlevel10k_dest }}"
+  register: p10k_theme_stat
+  tags:
+    - zsh
+    - theme
+    - zsh:theme
+
+- name: Установка темы Powerlevel10k
+  ansible.builtin.git:
+    repo: "{{ zsh_powerlevel10k_repo }}"
+    dest: "{{ zsh_user_home }}/.oh-my-zsh/{{ zsh_powerlevel10k_dest }}"
+    version: "{{ zsh_powerlevel10k_version }}"
+    update: true
+    force: true
+  become_user: "{{ zsh_user }}"
+  when:
+    - zsh_check_git | bool
+    - git_check is defined
+    - git_check.rc == 0
+    - zsh_install_powerlevel10k | bool
+    - not (p10k_theme_stat.stat.exists | default(false))
+  tags:
+    - zsh
+    - theme
+    - zsh:theme
+
+- name: Обновление темы Powerlevel10k (если уже установлена)
+  ansible.builtin.git:
+    repo: "{{ zsh_powerlevel10k_repo }}"
+    dest: "{{ zsh_user_home }}/.oh-my-zsh/{{ zsh_powerlevel10k_dest }}"
+    version: "{{ zsh_powerlevel10k_version }}"
+    update: true
+  become_user: "{{ zsh_user }}"
+  when:
+    - zsh_check_git | bool
+    - git_check is defined
+    - git_check.rc == 0
+    - zsh_install_powerlevel10k | bool
+    - p10k_theme_stat.stat.exists | default(false)
+  tags:
+    - zsh
+    - theme
+    - zsh:theme
+
+- name: Проверка успешной установки темы Powerlevel10k
+  ansible.builtin.stat:
+    path: "{{ zsh_user_home }}/.oh-my-zsh/{{ zsh_powerlevel10k_dest }}/powerlevel10k.zsh-theme"
+  register: p10k_theme_check
+  tags:
+    - zsh
+    - theme
+    - zsh:theme
+
+- name: Проверка наличия темы после установки
+  ansible.builtin.assert:
+    that:
+      - p10k_theme_check.stat.exists
+    fail_msg: "Тема Powerlevel10k не установлена корректно. Файл powerlevel10k.zsh-theme не найден."
+    success_msg: "Тема Powerlevel10k успешно установлена"
+  when: zsh_install_powerlevel10k | bool
+  tags:
+    - zsh
+    - theme
+    - zsh:theme

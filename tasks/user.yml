@@ -1,0 +1,104 @@
+---
+# Настройка пользователя для zsh
+
+- name: Проверка существования пользователя
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ zsh_user }}"
+  register: user_info
+  failed_when: false
+  changed_when: false
+  tags:
+    - zsh
+    - user
+
+- name: Создание домашней директории пользователя (если не существует)
+  ansible.builtin.file:
+    path: "{{ zsh_user_home }}"
+    state: directory
+    owner: "{{ zsh_user }}"
+    group: "{{ zsh_user }}"
+    mode: '0755'
+  when: user_info.ansible_facts.getent_passwd[zsh_user] is not defined
+  tags:
+    - zsh
+    - user
+
+- name: Получение текущего shell пользователя
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ zsh_user }}"
+  register: current_user_info
+  when: user_info.ansible_facts.getent_passwd[zsh_user] is defined
+  tags:
+    - zsh
+    - user
+
+- name: Определение текущего shell
+  ansible.builtin.set_fact:
+    current_shell: "{{ current_user_info.ansible_facts.getent_passwd[zsh_user][4] }}"
+  when: user_info.ansible_facts.getent_passwd[zsh_user] is defined
+  tags:
+    - zsh
+    - user
+
+- name: Получение пути к zsh
+  ansible.builtin.command:
+    cmd: which zsh
+  register: zsh_bin_path
+  changed_when: false
+  tags:
+    - zsh
+    - user
+    - zsh:user
+
+- name: Проверка существования zsh
+  ansible.builtin.assert:
+    that:
+      - zsh_bin_path.rc == 0
+      - zsh_bin_path.stdout is defined
+      - zsh_bin_path.stdout | length > 0
+    fail_msg: "Zsh не установлен или не найден в PATH"
+    success_msg: "Zsh найден: {{ zsh_bin_path.stdout }}"
+  tags:
+    - zsh
+    - user
+    - zsh:user
+
+- name: Установка zsh как shell по умолчанию для пользователя
+  ansible.builtin.user:
+    name: "{{ zsh_user }}"
+    shell: "{{ zsh_bin_path.stdout }}"
+  when:
+    - user_info.ansible_facts.getent_passwd[zsh_user] is defined
+    - current_shell is defined
+    - current_shell != zsh_bin_path.stdout
+  notify: restart zsh session
+  tags:
+    - zsh
+    - user
+    - zsh:user
+
+- name: Информация о текущем shell
+  ansible.builtin.debug:
+    msg: "Shell пользователя {{ zsh_user }}: {{ current_shell }} (изменён на {{ zsh_bin_path.stdout }})"
+  when:
+    - user_info.ansible_facts.getent_passwd[zsh_user] is defined
+    - current_shell is defined
+    - current_shell != zsh_bin_path.stdout
+  tags:
+    - zsh
+    - user
+    - zsh:user
+
+- name: Информация о том, что shell уже настроен
+  ansible.builtin.debug:
+    msg: "Shell пользователя {{ zsh_user }} уже установлен на {{ zsh_bin_path.stdout }}"
+  when:
+    - user_info.ansible_facts.getent_passwd[zsh_user] is defined
+    - current_shell is defined
+    - current_shell == zsh_bin_path.stdout
+  tags:
+    - zsh
+    - user
+    - zsh:user

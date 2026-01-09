@@ -1,0 +1,56 @@
+---
+# Применение роли zsh для тестирования
+
+- name: Converge
+  hosts: all
+  gather_facts: true
+  become: true
+  vars:
+    # Настройки для тестирования
+    zsh_enabled: true
+    zsh_user: "root"
+    zsh_set_default_shell: true
+    zsh_install_packages: true
+    zsh_install_ohmyzsh: true
+    zsh_install_external_plugins: true
+    zsh_install_powerlevel10k: true
+    zsh_create_p10k_config: true
+    zsh_configure_tmux: true
+    zsh_configure_nano: true
+    zsh_configure_mc: false  # Отключаем mc для тестов, т.к. не всегда установлен
+    zsh_backup_existing_configs: true
+
+  roles:
+    - role: ../../..
+      tags:
+        - zsh
+
+  post_tasks:
+    - name: Проверка установки zsh
+      ansible.builtin.command:
+        cmd: which zsh
+      register: zsh_check
+      changed_when: false
+
+    - name: Отображение результата проверки zsh
+      ansible.builtin.debug:
+        msg: "Zsh найден: {{ zsh_check.stdout }}"
+      when: zsh_check.rc == 0
+
+    - name: Проверка установки oh-my-zsh
+      ansible.builtin.stat:
+        path: "{{ zsh_user_home }}/.oh-my-zsh/oh-my-zsh.sh"
+      register: ohmyzsh_check
+
+    - name: Отображение результата проверки oh-my-zsh
+      ansible.builtin.debug:
+        msg: "Oh-my-zsh установлен: {{ ohmyzsh_check.stat.exists }}"
+
+    - name: Проверка создания .zshrc
+      ansible.builtin.stat:
+        path: "{{ zsh_user_home }}/.zshrc"
+      register: zshrc_check
+
+    - name: Отображение результата проверки .zshrc
+      ansible.builtin.debug:
+        msg: ".zshrc создан: {{ zshrc_check.stat.exists }}"

@@ -1,0 +1,346 @@
+---
+# Тесты для проверки работы роли zsh
+
+- name: Verify
+  hosts: all
+  gather_facts: true
+  become: true
+  tasks:
+    - name: Проверка версии дистрибутива
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.distribution in ['Debian', 'Ubuntu']
+          - ansible_facts.distribution_version is defined
+        fail_msg: "Неподдерживаемый дистрибутив"
+        success_msg: "Дистрибутив поддерживается: {{ ansible_facts.distribution }} {{ ansible_facts.distribution_version }}"
+      tags:
+        - verify
+        - verify:distribution
+
+    - name: Проверка наличия zsh
+      ansible.builtin.command:
+        cmd: which zsh
+      register: zsh_path
+      changed_when: false
+      tags:
+        - verify
+        - verify:zsh
+
+    - name: Проверка установки zsh
+      ansible.builtin.assert:
+        that:
+          - zsh_path.rc == 0
+          - zsh_path.stdout is defined
+          - zsh_path.stdout | length > 0
+        fail_msg: "Zsh не установлен или не найден в PATH"
+        success_msg: "Zsh установлен: {{ zsh_path.stdout }}"
+      tags:
+        - verify
+        - verify:zsh
+
+    - name: Получение версии zsh
+      ansible.builtin.command:
+        cmd: zsh --version
+      register: zsh_version
+      changed_when: false
+      tags:
+        - verify
+        - verify:zsh
+
+    - name: Отображение версии zsh
+      ansible.builtin.debug:
+        msg: "Zsh версия: {{ zsh_version.stdout }}"
+      tags:
+        - verify
+        - verify:zsh
+
+    - name: Проверка установки zsh как shell по умолчанию
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ zsh_user }}"
+      register: user_shell_info
+      tags:
+        - verify
+        - verify:user
+
+    - name: Проверка shell пользователя
+      ansible.builtin.assert:
+        that:
+          - user_shell_info.ansible_facts.getent_passwd[zsh_user][4] == zsh_path.stdout
+        fail_msg: "Zsh не установлен как shell по умолчанию для пользователя {{ zsh_user }}"
+        success_msg: "Zsh установлен как shell по умолчанию для пользователя {{ zsh_user }}"
+      tags:
+        - verify
+        - verify:user
+
+    - name: Проверка наличия oh-my-zsh
+      ansible.builtin.stat:
+        path: "{{ zsh_user_home }}/.oh-my-zsh"
+      register: ohmyzsh_dir
+      tags:
+        - verify
+        - verify:ohmyzsh
+
+    - name: Проверка установки oh-my-zsh
+      ansible.builtin.assert:
+        that:
+          - ohmyzsh_dir.stat.exists
+          - ohmyzsh_dir.stat.isdir
+        fail_msg: "Oh-my-zsh не установлен (директория не существует)"
+        success_msg: "Oh-my-zsh установлен (директория существует)"
+      tags:
+        - verify
+        - verify:ohmyzsh
+
+    - name: Проверка наличия oh-my-zsh.sh
+      ansible.builtin.stat:
+        path: "{{ zsh_user_home }}/.oh-my-zsh/oh-my-zsh.sh"
+      register: ohmyzsh_sh
+      tags:
+        - verify
+        - verify:ohmyzsh
+
+    - name: Проверка файла oh-my-zsh.sh
+      ansible.builtin.assert:
+        that:
+          - ohmyzsh_sh.stat.exists
+          - ohmyzsh_sh.stat.isreg
+        fail_msg: "Файл oh-my-zsh.sh не найден"
+        success_msg: "Файл oh-my-zsh.sh найден"
+      tags:
+        - verify
+        - verify:ohmyzsh
+
+    - name: Проверка наличия .zshrc
+      ansible.builtin.stat:
+        path: "{{ zsh_user_home }}/.zshrc"
+      register: zshrc_file
+      tags:
+        - verify
+        - verify:config
+
+    - name: Проверка создания .zshrc
+      ansible.builtin.assert:
+        that:
+          - zshrc_file.stat.exists
+          - zshrc_file.stat.isreg
+        fail_msg: ".zshrc не создан"
+        success_msg: ".zshrc создан"
+      tags:
+        - verify
+        - verify:config
+
+    - name: Проверка содержимого .zshrc
+      ansible.builtin.slurp:
+        src: "{{ zsh_user_home }}/.zshrc"
+      register: zshrc_content
+      tags:
+        - verify
+        - verify:config
+
+    - name: Проверка наличия ZSH_THEME в .zshrc
+      ansible.builtin.assert:
+        that:
+          - zshrc_content.content | b64decode | regex_search('ZSH_THEME')
+        fail_msg: "ZSH_THEME не найден в .zshrc"
+        success_msg: "ZSH_THEME найден в .zshrc"
+      tags:
+        - verify
+        - verify:config
+
+    - name: Проверка наличия плагинов в .zshrc
+      ansible.builtin.assert:
+        that:
+          - zshrc_content.content | b64decode | regex_search('plugins=')
+        fail_msg: "Плагины не настроены в .zshrc"
+        success_msg: "Плагины настроены в .zshrc"
+      tags:
+        - verify
+        - verify:config
+
+    - name: Проверка установки плагина zsh-autosuggestions
+      ansible.builtin.stat:
+        path: "{{ zsh_user_home }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+      register: autosuggestions_plugin
+      tags:
+        - verify
+        - verify:plugins
+
+    - name: Проверка наличия плагина zsh-autosuggestions
+      ansible.builtin.assert:
+        that:
+          - autosuggestions_plugin.stat.exists
+          - autosuggestions_plugin.stat.isdir
+        fail_msg: "Плагин zsh-autosuggestions не установлен"
+        success_msg: "Плагин zsh-autosuggestions установлен"
+      when: zsh_install_external_plugins | default(true) | bool
+      tags:
+        - verify
+        - verify:plugins
+
+    - name: Проверка установки плагина zsh-syntax-highlighting
+      ansible.builtin.stat:
+        path: "{{ zsh_user_home }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+      register: syntax_highlighting_plugin
+      tags:
+        - verify
+        - verify:plugins
+
+    - name: Проверка наличия плагина zsh-syntax-highlighting
+      ansible.builtin.assert:
+        that:
+          - syntax_highlighting_plugin.stat.exists
+          - syntax_highlighting_plugin.stat.isdir
+        fail_msg: "Плагин zsh-syntax-highlighting не установлен"
+        success_msg: "Плагин zsh-syntax-highlighting установлен"
+      when: zsh_install_external_plugins | default(true) | bool
+      tags:
+        - verify
+        - verify:plugins
+
+    - name: Проверка установки темы Powerlevel10k
+      ansible.builtin.stat:
+        path: "{{ zsh_user_home }}/.oh-my-zsh/custom/themes/powerlevel10k"
+      register: p10k_theme
+      when: zsh_install_powerlevel10k | default(true) | bool
+      tags:
+        - verify
+        - verify:theme
+
+    - name: Проверка наличия темы Powerlevel10k
+      ansible.builtin.assert:
+        that:
+          - p10k_theme.stat.exists
+          - p10k_theme.stat.isdir
+        fail_msg: "Тема Powerlevel10k не установлена"
+        success_msg: "Тема Powerlevel10k установлена"
+      when: 
+        - zsh_install_powerlevel10k | default(true) | bool
+        - p10k_theme is defined
+      tags:
+        - verify
+        - verify:theme
+
+    - name: Проверка наличия .p10k.zsh
+      ansible.builtin.stat:
+        path: "{{ zsh_user_home }}/.p10k.zsh"
+      register: p10k_config
+      when: zsh_create_p10k_config | default(true) | bool
+      tags:
+        - verify
+        - verify:theme
+
+    - name: Проверка создания .p10k.zsh
+      ansible.builtin.assert:
+        that:
+          - p10k_config.stat.exists
+          - p10k_config.stat.isreg
+        fail_msg: ".p10k.zsh не создан"
+        success_msg: ".p10k.zsh создан"
+      when:
+        - zsh_create_p10k_config | default(true) | bool
+        - p10k_config is defined
+      tags:
+        - verify
+        - verify:theme
+
+    - name: Проверка настройки tmux
+      ansible.builtin.stat:
+        path: "{{ zsh_user_home }}/.tmux.conf"
+      register: tmux_config
+      when: zsh_configure_tmux | default(true) | bool
+      tags:
+        - verify
+        - verify:tools
+
+    - name: Проверка создания .tmux.conf
+      ansible.builtin.assert:
+        that:
+          - tmux_config.stat.exists
+          - tmux_config.stat.isreg
+        fail_msg: ".tmux.conf не создан"
+        success_msg: ".tmux.conf создан"
+      when:
+        - zsh_configure_tmux | default(true) | bool
+        - tmux_config is defined
+      tags:
+        - verify
+        - verify:tools
+
+    - name: Проверка настройки nano
+      ansible.builtin.stat:
+        path: "{{ zsh_user_home }}/.nanorc"
+      register: nano_config
+      when: zsh_configure_nano | default(true) | bool
+      tags:
+        - verify
+        - verify:tools
+
+    - name: Проверка создания .nanorc
+      ansible.builtin.assert:
+        that:
+          - nano_config.stat.exists
+          - nano_config.stat.isreg
+        fail_msg: ".nanorc не создан"
+        success_msg: ".nanorc создан"
+      when:
+        - zsh_configure_nano | default(true) | bool
+        - nano_config is defined
+      tags:
+        - verify
+        - verify:tools
+
+    - name: Проверка прав доступа к .zshrc
+      ansible.builtin.stat:
+        path: "{{ zsh_user_home }}/.zshrc"
+      register: zshrc_perms
+      tags:
+        - verify
+        - verify:permissions
+
+    - name: Проверка прав доступа
+      ansible.builtin.assert:
+        that:
+          - zshrc_perms.stat.mode is defined
+          - zshrc_perms.stat.uid is defined
+        fail_msg: "Не удалось проверить права доступа к .zshrc"
+        success_msg: "Права доступа к .zshrc корректны (владелец: UID {{ zshrc_perms.stat.uid }}, режим: {{ zshrc_perms.stat.mode }})"
+      tags:
+        - verify
+        - verify:permissions
+
+    - name: Проверка синтаксиса .zshrc (базовая проверка)
+      ansible.builtin.command:
+        cmd: zsh -n {{ zsh_user_home }}/.zshrc
+      register: zshrc_syntax
+      changed_when: false
+      failed_when: false
+      tags:
+        - verify
+        - verify:syntax
+
+    - name: Проверка отсутствия ошибок синтаксиса
+      ansible.builtin.assert:
+        that:
+          - zshrc_syntax.rc == 0
+        fail_msg: "Ошибки синтаксиса в .zshrc: {{ zshrc_syntax.stderr }}"
+        success_msg: "Синтаксис .zshrc корректен"
+      tags:
+        - verify
+        - verify:syntax
+
+    - name: Итоговая информация
+      ansible.builtin.debug:
+        msg:
+          - "=========================================="
+          - "✅ Все проверки пройдены успешно!"
+          - "=========================================="
+          - "Zsh установлен: {{ zsh_path.stdout }}"
+          - "Zsh версия: {{ zsh_version.stdout }}"
+          - "Oh-my-zsh установлен: {{ ohmyzsh_dir.stat.exists }}"
+          - ".zshrc создан: {{ zshrc_file.stat.exists }}"
+          - "Плагины установлены: autosuggestions={{ autosuggestions_plugin.stat.exists | default(false) }}, syntax-highlighting={{ syntax_highlighting_plugin.stat.exists | default(false) }}"
+          - "Тема Powerlevel10k: {{ p10k_theme.stat.exists | default(false) if p10k_theme is defined else 'не проверялась' }}"
+          - "=========================================="
+      tags:
+        - verify

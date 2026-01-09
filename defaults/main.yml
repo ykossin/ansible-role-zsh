@@ -1,0 +1,141 @@
+---
+# Переменные по умолчанию для роли zsh
+# Обновлено: январь 2026
+
+# Включить/выключить роль
+zsh_enabled: true
+
+# Пользователь для настройки zsh
+# Если не указан, используется ansible_user или 'root'
+zsh_user: "{{ ansible_user | default('root') }}"
+
+# Домашняя директория пользователя
+# Вычисляется автоматически на основе zsh_user
+zsh_user_home: "{{ (zsh_user == 'root') | ternary('/root', '/home/' + zsh_user) }}"
+
+# Установка zsh как shell по умолчанию
+zsh_set_default_shell: true
+
+# Устанавливать zsh и зависимости
+zsh_install_packages: true
+
+# Список пакетов для установки
+zsh_packages:
+  - zsh
+  - git
+  - curl
+
+# Настройки локали (английская по умолчанию, но с поддержкой кириллицы)
+zsh_locale_default: "en_US.UTF-8"
+zsh_locale_ru: "ru_RU.UTF-8"
+
+# Установка oh-my-zsh
+zsh_install_ohmyzsh: true
+
+# Репозиторий oh-my-zsh
+zsh_ohmyzsh_repo: "https://github.com/ohmyzsh/ohmyzsh.git"
+zsh_ohmyzsh_version: "master"
+zsh_ohmyzsh_dir: "{{ zsh_user_home }}/.oh-my-zsh"
+
+# Тема oh-my-zsh
+# Популярные темы: robbyrussell, agnoster, powerlevel10k/powerlevel10k, spaceship
+zsh_theme: "powerlevel10k/powerlevel10k"
+
+# Плагины oh-my-zsh (стандартные из репозитория)
+zsh_plugins:
+  - git
+  - docker
+  - docker-compose
+  - kubectl
+  - ansible
+  - systemd
+  - sudo
+  - colored-man-pages
+  - command-not-found
+  - history
+  - extract
+  - z
+  - zsh-autosuggestions
+  - zsh-syntax-highlighting
+
+# Установка дополнительных плагинов (external plugins)
+zsh_install_external_plugins: true
+
+# Внешние плагины для установки
+zsh_external_plugins:
+  - name: zsh-autosuggestions
+    repo: "https://github.com/zsh-users/zsh-autosuggestions.git"
+    dest: "{{ zsh_ohmyzsh_dir }}/custom/plugins/zsh-autosuggestions"
+    version: "master"
+  - name: zsh-syntax-highlighting
+    repo: "https://github.com/zsh-users/zsh-syntax-highlighting.git"
+    dest: "{{ zsh_ohmyzsh_dir }}/custom/plugins/zsh-syntax-highlighting"
+    version: "master"
+
+# Установка темы Powerlevel10k
+zsh_install_powerlevel10k: true
+
+# Репозиторий Powerlevel10k
+zsh_powerlevel10k_repo: "https://github.com/romkatv/powerlevel10k.git"
+zsh_powerlevel10k_dest: "{{ zsh_ohmyzsh_dir }}/custom/themes/powerlevel10k"
+zsh_powerlevel10k_version: "master"
+
+# Создавать конфигурацию Powerlevel10k
+zsh_create_p10k_config: true
+
+# Настройки истории zsh
+zsh_history_size: 10000
+zsh_history_save_size: 10000
+zsh_history_options:
+  - SHARE_HISTORY
+  - HIST_IGNORE_DUPS
+  - HIST_IGNORE_ALL_DUPS
+  - HIST_REDUCE_BLANKS
+  - HIST_VERIFY
+
+# Резервное копирование существующих конфигураций
+zsh_backup_existing_configs: true
+
+# Алиасы для zsh (дополнительные, поверх стандартных)
+zsh_custom_aliases: []
+
+# Кастомные функции для .zshrc
+zsh_custom_functions: []
+
+# Кастомные настройки для .zshrc (будут добавлены в конец файла)
+zsh_custom_config: ""
+
+# Проверка наличия git перед установкой плагинов
+zsh_check_git: true
+
+# Настройка дополнительных инструментов
+zsh_configure_tmux: true
+zsh_configure_nano: true
+zsh_configure_mc: true
+
+# Настройки tmux (будет использовано в tasks/tools.yml с подстановкой переменных)
+zsh_tmux_config:
+  - "set -g default-command \"export LANG={0}; exec /usr/bin/zsh\""
+  - "set -g default-shell /usr/bin/zsh"
+  - "# UTF-8 поддерживается по умолчанию в современных версиях tmux"
+  - "set -g mouse on"
+  - "set -g history-limit 10000"
+  - "set -g base-index 1"
+  - "setw -g pane-base-index 1"
+
+# Настройки nano
+zsh_nano_config:
+  - "set encoding utf8"
+  - "set tabsize 4"
+  - "set autoindent"
+  - "set mouse"
+  - "set linenumbers"
+
+# Настройки mc (Midnight Commander)
+zsh_mc_config:
+  - "[Misc]"
+  - "use_8th_bit_as_meta=1"
+  - "clear_before_exec=1"
+  - "fast_refresh=0"
+  - "[Colors]"
+  - "base_color=color16,color16"

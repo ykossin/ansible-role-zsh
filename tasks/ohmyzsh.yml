@@ -1,0 +1,44 @@
+---
+# Установка oh-my-zsh
+
+- name: Проверка существования .zshrc
+  ansible.builtin.stat:
+    path: "{{ zsh_user_home }}/.zshrc"
+  register: zshrc_stat
+  tags:
+    - zsh
+    - ohmyzsh
+
+- name: Создание резервной копии существующего .zshrc
+  ansible.builtin.copy:
+    src: "{{ zsh_user_home }}/.zshrc"
+    dest: "{{ zsh_user_home }}/.zshrc.backup.{{ ansible_date_time.epoch }}"
+    remote_src: true
+    owner: "{{ zsh_user }}"
+    group: "{{ zsh_user }}"
+    mode: '0644'
+  when:
+    - zsh_backup_existing_configs | bool
+    - zshrc_stat.stat.exists | default(false)
+  tags:
+    - zsh
+    - ohmyzsh
+
+- name: Удаление существующего oh-my-zsh (если есть)
+  ansible.builtin.file:
+    path: "{{ zsh_ohmyzsh_dir }}"
+    state: absent
+  tags:
+    - zsh
+    - ohmyzsh
+
+- name: Установка oh-my-zsh
+  ansible.builtin.git:
+    repo: "{{ zsh_ohmyzsh_repo }}"
+    dest: "{{ zsh_ohmyzsh_dir }}"
+    version: "{{ zsh_ohmyzsh_version }}"
+    depth: 1
+  become_user: "{{ zsh_user }}"
+  tags:
+    - zsh
+    - ohmyzsh

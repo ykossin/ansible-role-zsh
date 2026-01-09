@@ -1,0 +1,130 @@
+# Oh My Zsh конфигурация
+# Сгенерировано Ansible ролью zsh
+# Дата: {{ ansible_date_time.iso8601 }}
+
+# Настройка пути к oh-my-zsh
+export ZSH="{{ zsh_ohmyzsh_dir }}"
+
+# Настройки локали - английская локаль по умолчанию, но с поддержкой кириллицы
+export LANG={{ zsh_locale_default }}
+export LC_ALL={{ zsh_locale_default }}
+# Поддержка кириллицы в консоли
+export LC_CTYPE={{ zsh_locale_default }}
+
+# Тема oh-my-zsh
+ZSH_THEME="{{ zsh_theme }}"
+
+# Плагины oh-my-zsh
+plugins=(
+{% for plugin in zsh_plugins %}
+  {{ plugin }}
+{% endfor %}
+)
+
+# Загрузка oh-my-zsh
+source $ZSH/oh-my-zsh.sh
+
+# Настройка Powerlevel10k
+{% if zsh_theme == "powerlevel10k/powerlevel10k" and zsh_create_p10k_config | bool %}
+if [[ -f {{ zsh_user_home }}/.p10k.zsh ]]; then
+  source {{ zsh_user_home }}/.p10k.zsh
+fi
+{% endif %}
+
+# Настройки истории zsh
+HISTFILE=~/.zsh_history
+HISTSIZE={{ zsh_history_size }}
+SAVEHIST={{ zsh_history_save_size }}
+{% for option in zsh_history_options %}
+setopt {{ option }}
+{% endfor %}
+
+# Настройки автодополнения
+autoload -Uz compinit
+compinit -d "$HOME/.zcompdump"
+
+# Настройки для работы с кириллицей (поддержка через UTF-8)
+export LC_CTYPE={{ zsh_locale_default }}
+export LC_MESSAGES={{ zsh_locale_default }}
+
+# Алиасы для навигации
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# Алиасы для поиска и фильтрации
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+alias diff='diff --color=auto'
+
+# Алиасы для системных команд
+alias df='df -h'
+alias du='du -h'
+alias free='free -h'
+alias ps='ps aux'
+alias top='htop || top'
+
+# Алиасы для git
+alias gs='git status'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline --graph --decorate --all'
+alias gd='git diff'
+alias gb='git branch'
+alias gco='git checkout'
+
+# Алиасы для docker
+alias d='docker'
+alias dc='docker-compose'
+alias dps='docker ps'
+alias dimg='docker images'
+alias dexec='docker exec -it'
+
+# Алиасы для kubectl
+alias k='kubectl'
+alias kg='kubectl get'
+alias kd='kubectl describe'
+alias ka='kubectl apply'
+alias kd='kubectl delete'
+
+# Цвета для ls
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+fi
+
+# Настройка редактора
+export EDITOR=nano
+export VISUAL=nano
+
+# Настройка PATH
+export PATH=$PATH:$HOME/.local/bin
+
+# Кастомные алиасы
+{% if zsh_custom_aliases is defined and zsh_custom_aliases | length > 0 %}
+{% for alias in zsh_custom_aliases %}
+alias {{ alias }}
+{% endfor %}
+{% endif %}
+
+# Кастомные функции
+{% if zsh_custom_functions is defined and zsh_custom_functions | length > 0 %}
+{% for function in zsh_custom_functions %}
+{{ function }}
+{% endfor %}
+{% endif %}
+
+# Кастомные настройки
+{% if zsh_custom_config is defined and zsh_custom_config | length > 0 %}
+{{ zsh_custom_config }}
+{% endif %}
+
+# Приветствие (опционально)
+if command -v figlet > /dev/null 2>&1; then
+    figlet -f small "Welcome"
+fi

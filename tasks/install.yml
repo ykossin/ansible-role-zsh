@@ -1,0 +1,80 @@
+---
+# Установка zsh и зависимостей
+
+- name: Установка zsh и зависимостей (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name: "{{ zsh_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when:
+    - ansible_facts['os_family'] == "Debian"
+  tags:
+    - zsh
+    - install
+    - zsh:install
+
+- name: Установка zsh и зависимостей (RedHat/CentOS/Fedora)
+  ansible.builtin.yum:
+    name: "{{ zsh_packages }}"
+    state: present
+  when:
+    - ansible_facts['os_family'] == "RedHat"
+  tags:
+    - zsh
+    - install
+    - zsh:install
+
+- name: Проверка установки zsh
+  ansible.builtin.command:
+    cmd: which zsh
+  register: zsh_path
+  changed_when: false
+  failed_when: false
+  tags:
+    - zsh
+    - install
+    - zsh:install
+
+- name: Получение версии zsh
+  ansible.builtin.command:
+    cmd: zsh --version
+  register: zsh_version
+  changed_when: false
+  when: zsh_path.rc == 0
+  tags:
+    - zsh
+    - install
+    - zsh:install
+
+- name: Отображение версии zsh
+  ansible.builtin.debug:
+    msg: "Zsh установлен: {{ zsh_version.stdout }}"
+  when: zsh_version is defined
+  tags:
+    - zsh
+    - install
+    - zsh:install
+
+- name: Проверка наличия git (для установки плагинов)
+  ansible.builtin.command:
+    cmd: which git
+  register: git_check
+  changed_when: false
+  failed_when: false
+  when: zsh_check_git | bool
+  tags:
+    - zsh
+    - install
+    - zsh:install
+
+- name: Предупреждение об отсутствии git
+  ansible.builtin.debug:
+    msg: "⚠️  Git не найден. Установка плагинов будет пропущена."
+  when:
+    - zsh_check_git | bool
+    - git_check.rc != 0
+  tags:
+    - zsh
+    - install
+    - zsh:install

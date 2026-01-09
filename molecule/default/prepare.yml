@@ -1,0 +1,51 @@
+---
+# Подготовка окружения перед применением роли zsh
+# Упрощенная версия - минимум необходимых действий
+
+- name: Prepare
+  hosts: all
+  gather_facts: true
+  become: true
+  tasks:
+    - name: Ожидание запуска systemd
+      ansible.builtin.wait_for:
+        path: /run/systemd/system
+        timeout: 30
+      register: systemd_ready
+      failed_when: false
+
+    - name: Проверка статуса systemd
+      ansible.builtin.command:
+        cmd: systemctl is-system-running || true
+      register: systemd_status
+      changed_when: false
+      failed_when: false
+
+    - name: Отображение статуса systemd
+      ansible.builtin.debug:
+        msg: "Systemd статус: {{ systemd_status.stdout }}"
+      when: systemd_status.rc == 0
+
+    - name: Установка git и curl (предварительно, для работы роли)
+      ansible.builtin.apt:
+        name:
+          - git
+          - curl
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_facts['os_family'] == "Debian"
+      register: git_install
+      failed_when: false
+      changed_when: git_install.changed
+
+    - name: Проверка установки git
+      ansible.builtin.command:
+        cmd: which git
+      register: git_check_prepare
+      changed_when: false
+      failed_when: false
+
+    - name: Отображение статуса git
+      ansible.builtin.debug:
+        msg: "Git установлен: {{ 'да' if git_check_prepare.rc == 0 else 'нет' }}"

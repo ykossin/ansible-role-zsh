@@ -1,0 +1,32 @@
+---
+# Установка внешних плагинов oh-my-zsh
+
+- name: Создание директории для кастомных плагинов
+  ansible.builtin.file:
+    path: "{{ zsh_ohmyzsh_dir }}/custom/plugins"
+    state: directory
+    owner: "{{ zsh_user }}"
+    group: "{{ zsh_user }}"
+    mode: '0755'
+  when: zsh_install_ohmyzsh | bool
+  tags:
+    - zsh
+    - plugins
+    - zsh:plugins
+
+- name: Установка внешних плагинов из репозиториев
+  ansible.builtin.git:
+    repo: "{{ item.repo }}"
+    dest: "{{ item.dest }}"
+    version: "{{ item.version | default('master') }}"
+    update: true
+    force: true
+  become_user: "{{ zsh_user }}"
+  loop: "{{ zsh_external_plugins }}"
+  when:
+    - git_check.rc == 0
+    - zsh_install_ohmyzsh | bool
+  tags:
+    - zsh
+    - plugins
+    - zsh:plugins

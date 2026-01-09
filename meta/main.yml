@@ -1,0 +1,34 @@
+---
+galaxy_info:
+  author: ykossin
+  role_name: zsh
+  namespace: ykossin
+  description: Роль для установки и настройки zsh с oh-my-zsh, плагинами и темой Powerlevel10k
+  license: ISC
+  min_ansible_version: "2.9"
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+        - trixie
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+  galaxy_tags:
+    - shell
+    - zsh
+    - oh-my-zsh
+    - terminal
+    - development
+    - powerlevel10k
+    - configuration
+    - tools
+
+dependencies: []

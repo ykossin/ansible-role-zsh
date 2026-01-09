@@ -1,0 +1,64 @@
+---
+# Настройка дополнительных инструментов (tmux, nano, mc)
+
+- name: Настройка tmux для работы с zsh
+  ansible.builtin.lineinfile:
+    path: "{{ zsh_user_home }}/.tmux.conf"
+    line: "{{ item | replace('{0}', zsh_locale_default) }}"
+    create: true
+    mode: '0644'
+    owner: "{{ zsh_user }}"
+    group: "{{ zsh_user }}"
+  loop: "{{ zsh_tmux_config }}"
+  when: zsh_configure_tmux | bool
+  tags:
+    - zsh
+    - tools
+    - zsh:tools
+    - tmux
+
+- name: Настройка nano для работы с кириллицей
+  ansible.builtin.lineinfile:
+    path: "{{ zsh_user_home }}/.nanorc"
+    line: "{{ item }}"
+    create: true
+    mode: '0644'
+    owner: "{{ zsh_user }}"
+    group: "{{ zsh_user }}"
+  loop: "{{ zsh_nano_config }}"
+  when: zsh_configure_nano | bool
+  tags:
+    - zsh
+    - tools
+    - zsh:tools
+    - nano
+
+- name: Создание директории для mc конфига
+  ansible.builtin.file:
+    path: "{{ zsh_user_home }}/.config/mc"
+    state: directory
+    owner: "{{ zsh_user }}"
+    group: "{{ zsh_user }}"
+    mode: '0755'
+  when: zsh_configure_mc | bool
+  tags:
+    - zsh
+    - tools
+    - zsh:tools
+    - mc
+
+- name: Настройка mc для работы с кириллицей
+  ansible.builtin.lineinfile:
+    path: "{{ zsh_user_home }}/.config/mc/ini"
+    line: "{{ item }}"
+    create: true
+    mode: '0644'
+    owner: "{{ zsh_user }}"
+    group: "{{ zsh_user }}"
+  loop: "{{ zsh_mc_config }}"
+  when: zsh_configure_mc | bool
+  tags:
+    - zsh
+    - tools
+    - zsh:tools
+    - mc

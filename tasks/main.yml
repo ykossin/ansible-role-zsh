@@ -1,0 +1,66 @@
+---
+# Основной файл задач роли zsh
+# Все задачи разделены по функциональным модулям с соответствующими тегами
+
+- name: Проверка включения роли
+  ansible.builtin.assert:
+    that:
+      - zsh_enabled | bool
+    fail_msg: "Роль zsh отключена (zsh_enabled: false)"
+    success_msg: "Роль zsh включена"
+  tags:
+    - zsh
+    - always
+
+- name: Установка zsh и зависимостей
+  ansible.builtin.include_tasks: install.yml
+  tags:
+    - zsh
+    - install
+    - zsh:install
+
+- name: Настройка пользователя и shell
+  ansible.builtin.include_tasks: user.yml
+  when: zsh_set_default_shell | bool
+  tags:
+    - zsh
+    - user
+    - zsh:user
+
+- name: Установка oh-my-zsh
+  ansible.builtin.include_tasks: ohmyzsh.yml
+  when: zsh_install_ohmyzsh | bool
+  tags:
+    - zsh
+    - ohmyzsh
+    - zsh:ohmyzsh
+
+- name: Установка темы
+  ansible.builtin.include_tasks: theme.yml
+  when: zsh_install_powerlevel10k | bool and zsh_theme == "powerlevel10k/powerlevel10k"
+  tags:
+    - zsh
+    - theme
+    - zsh:theme
+
+- name: Установка плагинов
+  ansible.builtin.include_tasks: plugins.yml
+  when: zsh_install_external_plugins | bool
+  tags:
+    - zsh
+    - plugins
+    - zsh:plugins
+
+- name: Настройка конфигурации zsh
+  ansible.builtin.include_tasks: config.yml
+  tags:
+    - zsh
+    - config
+    - zsh:config
+
+- name: Настройка дополнительных инструментов
+  ansible.builtin.include_tasks: tools.yml
+  tags:
+    - zsh
+    - tools
+    - zsh:tools

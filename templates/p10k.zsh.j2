@@ -1,0 +1,69 @@
+# Конфигурация Powerlevel10k
+# Сгенерировано Ansible ролью zsh
+# Дата: {{ ansible_date_time.iso8601 }}
+# 
+# ВАЖНО: Это базовая конфигурация. Для полной настройки выполните: p10k configure
+# Это запустит интерактивный мастер настройки
+
+# Настройки локали - английская по умолчанию, но с поддержкой кириллицы
+export LANG={{ zsh_locale_default }}
+export LC_ALL={{ zsh_locale_default }}
+export LC_CTYPE={{ zsh_locale_default }}
+
+# Основные настройки Powerlevel10k (совместимость с Powerlevel9k)
+# Powerlevel10k поддерживает переменные POWERLEVEL9K для обратной совместимости
+POWERLEVEL9K_MODE='nerdfont-complete'
+POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon dir vcs)
+POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status root_indicator background_jobs history time)
+
+# Настройки директории
+POWERLEVEL9K_SHORTEN_STRATEGY="truncate_to_unique"
+POWERLEVEL9K_SHORTEN_DELIMITER=""
+POWERLEVEL9K_DIR_SHOW_WRITABLE=true
+
+# Настройки Git
+POWERLEVEL9K_VCS_GIT_ICON=''
+POWERLEVEL9K_VCS_STAGED_ICON='\u00b1'
+POWERLEVEL9K_VCS_UNSTAGED_ICON='\u00b1'
+POWERLEVEL9K_VCS_UNTRACKED_ICON='\u25CF'
+POWERLEVEL9K_VCS_INCOMING_CHANGES_ICON='\u2193'
+POWERLEVEL9K_VCS_OUTGOING_CHANGES_ICON='\u2191'
+
+# Цвета директории
+POWERLEVEL9K_DIR_DEFAULT_BACKGROUND='4'
+POWERLEVEL9K_DIR_DEFAULT_FOREGROUND='0'
+POWERLEVEL9K_DIR_HOME_BACKGROUND='4'
+POWERLEVEL9K_DIR_HOME_FOREGROUND='0'
+POWERLEVEL9K_DIR_HOME_SUBFOLDER_BACKGROUND='4'
+POWERLEVEL9K_DIR_HOME_SUBFOLDER_FOREGROUND='0'
+
+# Время
+{% raw %}POWERLEVEL9K_TIME_FORMAT="%D{%H:%M:%S}"{% endraw %}
+POWERLEVEL9K_TIME_BACKGROUND='0'
+POWERLEVEL9K_TIME_FOREGROUND='7'
+
+# Статус выполнения команд
+POWERLEVEL9K_STATUS_OK_BACKGROUND='2'
+POWERLEVEL9K_STATUS_OK_FOREGROUND='0'
+POWERLEVEL9K_STATUS_ERROR_BACKGROUND='1'
+POWERLEVEL9K_STATUS_ERROR_FOREGROUND='0'
+
+# История команд
+POWERLEVEL9K_HISTORY_BACKGROUND='0'
+POWERLEVEL9K_HISTORY_FOREGROUND='7'
+
+# Фоновые задачи
+POWERLEVEL9K_BACKGROUND_JOBS_BACKGROUND='3'
+POWERLEVEL9K_BACKGROUND_JOBS_FOREGROUND='0'
+
+# Индикатор root
+POWERLEVEL9K_ROOT_INDICATOR_BACKGROUND='1'
+POWERLEVEL9K_ROOT_INDICATOR_FOREGROUND='7'
+
+# Иконка ОС
+POWERLEVEL9K_OS_ICON_BACKGROUND='0'
+POWERLEVEL9K_OS_ICON_FOREGROUND='7'
+
+# Дополнительные настройки для улучшения производительности
+POWERLEVEL9K_INSTANT_PROMPT=quiet
+POWERLEVEL9K_DISABLE_INSTANT_PROMPT=false

@@ -1,0 +1,7 @@
+---
+# Обработчики для роли zsh
+
+- name: restart zsh session
+  ansible.builtin.debug:
+    msg: "Для применения изменений выполните: exec zsh или перезайдите в систему"
+  listen: restart zsh session
