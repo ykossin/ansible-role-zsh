@@ -105,9 +105,7 @@
   tags:
     - zsh
     - ohmyzsh
-    - zsh:ohmyzsh
-
-- name: Проверка наличия oh-my-zsh.sh после установки
+    - zsh:ohmyzsh- name: Проверка наличия oh-my-zsh.sh после установки
   ansible.builtin.assert:
     that:
       - ohmyzsh_final_check.stat.exists
@@ -116,9 +114,7 @@
   tags:
     - zsh
     - ohmyzsh
-    - zsh:ohmyzsh
-
-- name: Создание директории для кастомных плагинов
+    - zsh:ohmyzsh- name: Создание директории для кастомных плагинов
   ansible.builtin.file:
     path: "{{ zsh_user_home }}/.oh-my-zsh/custom/plugins"
     state: directory
